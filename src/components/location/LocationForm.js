@@ -1,81 +1,111 @@
-import React, { useContext, useEffect, useState } from "react"
-import { useHistory } from 'react-router-dom';
-import { LocationContext } from './LocationProvider'
+import React, { useContext, useEffect, useState } from "react";
+import { useHistory, useParams } from 'react-router-dom';
+import { LocationContext } from "./LocationProvider";
+import "./Location.css";
 
 
 export const LocationForm = () => {
-    
-    const { location, getLocations, addLocation } = useContext(LocationContext)
-    /*
-    With React, we do not target the DOM with `document.querySelector()`. Instead, our return (render) reacts to state or props.
-    Define the intial state of the form inputs with useState()
-    */
+    const { addLocation, getLocationById, updateLocation } = useContext(LocationContext);
 
-    const [locationAdd, setLocation] = useState({
+    // For edit, hold on to state of location in this view
+    // You need an initial state for it to allow you to edit it
+    const [location, setLocation] = useState({
       name: "",
-      address: "",
+      address: ""
     });
 
+    //wait for data before button is active
+    const [isLoading, setIsLoading] = useState(true);
+
+    const {locationId} = useParams();
+    
     const history = useHistory();
 
-    /*
-    Reach out to the world and get customers state
-    and locations state on initialization.
-    */
-    useEffect(() => {
-      getLocations()
-    }, []) // eslint-disable-line react-hooks/exhaustive-deps
-
-
-
-    //when a field changes, update state. The return will re-render and display based on the values in state
+    //when field changes, update state. This causes a re-render and updates the view.
     //Controlled component
     const handleControlledInputChange = (event) => {
-      /* When changing a state object or array,
-      always create a copy, make changes, and then set state.*/
-      const newLocation = { ...locationAdd }
-      /* Animal is an object with properties.
-      Set the property to the new value
-      using object bracket notation. */
-      newLocation[event.target.id] = event.target.value
-      // update state
-      setLocation(newLocation)
-    }
+      //When changing a state object or array,
+      //always create a copy make changes, and then set state.
+      const newLocation = { ...location };
 
-    const handleClickSaveLocation = (event) => {
-      event.preventDefault() //Prevents the browser from submitting the form
-    
-      const locationInput = document.getElementById("name").value
-      const addressInput = document.getElementById("address").value
+      //location is an object with properties.
+      //set the property to the new value
+      newLocation[event.target.name] = event.target.value;
       
-      if (locationInput === "" || addressInput === "") {
-        window.alert("Please enter a location name as well and address")
+      //update state
+      setLocation(newLocation);
+    };
+
+    const handleSaveLocation = () => {
+      if (parseInt(location.name || location.address) === "") {
+          window.alert("Please fill out the name and address fields")
       } else {
-        addLocation(locationAdd)
-        .then(() => history.push("/locations"))
-      }
-    }
+        //disable the button - no extra clicks
+        setIsLoading(true);
+        if (locationId){
+          //PUT - update
+          updateLocation({
+              id: location.id,
+              name: location.name,
+              address: location.address
+          })
+          .then(() => history.push(`/locations/detail/${location.id}`))
+        }else {
+          //POST - add
+          addLocation({
+              name: location.name,
+              address: location.address
+          })
+          .then(() => history.push("/locations"))
+        };
+      };
+    };
+
+    // Get locations. If locationId is in the URL, getLocationById
+    useEffect(() => {
+        if (locationId){
+          getLocationById(locationId)
+          .then(location => {
+              setLocation(location);
+              setIsLoading(false);
+          })
+        } else {
+          setIsLoading(false);
+        }
+    }, // eslint-disable-next-line
+    []);
+
+    //since state controlls this component, we no longer need
+    //useRef(null) or ref
 
     return (
       <form className="locationForm">
-          <h2 className="locationForm__title">New Location</h2>
-          <fieldset>
-              <div className="form-group">
-                  <label htmlFor="name">Location name: </label>
-                  <input type="text" id="name" onChange={handleControlledInputChange} required autoFocus className="form-control" placeholder="Location name" value={locationAdd.name}/>
-              </div>
-          </fieldset>
-          <fieldset>
-              <div className="form-group">
-                  <label htmlFor="name">Address: </label>
-                  <input type="text" id="address" onChange={handleControlledInputChange} required className="form-control" placeholder="Address" value={locationAdd.address}/>
-              </div>
-          </fieldset>
-          
-          <button className="btn btn-primary"
-            onClick={handleClickSaveLocation}>
-            Save Location
-          </button>
+        <h2 className="locationForm__title">{locationId ? <>Edit Location</> : <>New Location</>}</h2>
+        <fieldset>
+          <div className="form-group">
+            <label htmlFor="locationName">Location name: </label>
+            <input type="text" id="locationName" name="name" required autoFocus className="form-control"
+            placeholder="Location name"
+            onChange={handleControlledInputChange}
+            defaultValue={location.name}/>
+          </div>
+        </fieldset>
+        <fieldset>
+            <div className="form-group">
+                <label htmlFor="locationAddress">Location Address: </label>
+                <input type="text" id="locationAddress" name="address" required className="form-control"
+                placeholder="Location address"
+                onChange={handleControlledInputChange}
+                defaultValue={location.address} />
+            </div>
+        </fieldset>
+        <button className="btn btn-primary"
+          disabled={isLoading}
+          onClick={event => {
+            event.preventDefault(); // Prevent browser from submitting the form and refreshing the page
+            handleSaveLocation();
+          }}>
+        {locationId ? <>Save Location</> : <>Add Location</>}</button>
       </form>
-    )
-}
+    );
+};

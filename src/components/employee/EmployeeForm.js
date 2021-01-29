@@ -2,11 +2,11 @@ import React, { useContext, useEffect, useState } from "react"
 import { LocationContext } from "../location/LocationProvider"
 import { EmployeeContext } from "./EmployeeProvider"
 import "./Employee.css"
-import { useHistory } from 'react-router-dom';
+import { useHistory, useParams } from 'react-router-dom';
 
 export const EmployeeForm = () => {
     const { addEmployee } = useContext(EmployeeContext)
-    const { locations, getLocations } = useContext(LocationContext)
+    const { locations, getLocations, updateEmployee } = useContext(LocationContext)
 
     const [employee, setEmployee] = useState({
       name: "",

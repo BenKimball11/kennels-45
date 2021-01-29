@@ -44,3 +44,14 @@ export const AnimalList = () => {
         </div>
     )
 }
+
+
+/* Users can login or register a new account
+Users can have the option to go through previous logs 
+The user would first be able to select the date of the workout
+Users would be able to add a title 
+The user could then journal in a text area about whatever they would like to concerning the workout
+Users could then have the option to record any weights being used to allow users to go back and see how they have improved/not improved
+The user would be able to have the option to select a number of preset moods so users could go back and see how they have progressed
+Users would have the option to store all entries in a database 
+ */
